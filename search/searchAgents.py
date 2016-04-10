@@ -510,38 +510,18 @@ def foodHeuristic(state, problem):
     from operator import itemgetter, attrgetter, methodcaller
     coord = position
     
+    sortedFoodGrid = sorted(foodGrid.asList(), key=lambda x:abs(x[0] - coord[0]) + abs(x[1] - coord[1]))
+    sumMathan = 0
 
-    greaterX = [x for x in foodGrid.asList() if x[0] >= coord[0]]
-    lowerX = [x for x in foodGrid.asList() if x[0] < coord[1]]
+    if len(sortedFoodGrid) >= 1:
+        sumMathan = sumMathan + abs(sortedFoodGrid[0][0] - coord[0]) + abs(sortedFoodGrid[0][1] - coord[1])
 
-    sortedGreaterX = sorted(greaterX, key=itemgetter(0))
-    sortedLowerX = sorted(lowerX, key=itemgetter(0))
+        next = sortedFoodGrid[0]
+        for x in sortedFoodGrid[1:]:
+            sumMathan = sumMathan + abs(x[0] - next[0]) + abs(x[1] - next[1])
+            next = x
 
-    minR = 0
-    minL = 0
-    sumR = 0
-    sumL = 0
-
-    mathansR = list(map(lambda x:abs(x[0] - coord[0]) + abs(x[1] - coord[1]), greaterX))
-    mathansL = list(map(lambda x:abs(x[0] - coord[0]) + abs(x[1] - coord[1]), lowerX))
-
-    if len(mathansR) > 0:
-        minR = min(mathansR)
-
-        next = sortedGreaterX[0]
-        for i in range(1,len(sortedGreaterX)):
-            sumR = sumR + abs(next[0] - sortedGreaterX[i][0]) + abs(next[1] - sortedGreaterX[i][1])
-            next = sortedGreaterX[i]
-
-    if len(mathansL) > 0:
-        minL = min(mathansL)
-
-        next = sortedLowerX[0]
-        for i in range(1,len(sortedLowerX)):
-            sumR = sumR + abs(next[0] - sortedLowerX[i][0]) + abs(next[1] - sortedLowerX[i][1])
-            next = sortedLowerX[i]
-
-    return (minR + minL + sumR + sumL)
+    return sumMathan
 
 class ClosestDotSearchAgent(SearchAgent):
     "Search for all food using a sequence of searches"

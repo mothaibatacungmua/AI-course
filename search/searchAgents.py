@@ -288,27 +288,6 @@ class CornersProblem(search.SearchProblem):
         # Please add any code here which you would like to use
         # in initializing the problem
         "*** YOUR CODE HERE ***"
-        self.visitedCorners = [False, False, False, False]
-
-        self.setEatenCorner(self.startingPosition)
-
-    def setEatenCorner(self, state):
-        i = self.isCorner(state)
-        if i != None:
-            self.visitedCorners[i] = True
-
-        pass
-
-    def isCorner(self, state):
-        for i in range(0, len(self.corners)):
-            if state == self.corners[i]:
-                return i
-        return None
-
-    def isNonVisitedSubtarget(self, state):
-        i = self.isCorner(state)
-        
-        return ((i != None) and (self.visitedCorners[i] == False))
 
     def getStartState(self):
         """
@@ -316,8 +295,7 @@ class CornersProblem(search.SearchProblem):
         space)
         """
         "*** YOUR CODE HERE ***"
-        return self.startingPosition
-        #util.raiseNotDefined()
+        util.raiseNotDefined()
 
     def isGoalState(self, state):
         """
@@ -325,11 +303,7 @@ class CornersProblem(search.SearchProblem):
         """
         "*** YOUR CODE HERE ***"
 
-        return (self.visitedCorners[0] and \
-                self.visitedCorners[1] and \
-                self.visitedCorners[2] and \
-                self.visitedCorners[3])
-        #util.raiseNotDefined()
+        util.raiseNotDefined()
 
     def getSuccessors(self, state):
         """
@@ -341,8 +315,6 @@ class CornersProblem(search.SearchProblem):
             state, 'action' is the action required to get there, and 'stepCost'
             is the incremental cost of expanding to that successor
         """
-
-        self.setEatenCorner(state)
 
         successors = []
         for action in [Directions.NORTH, Directions.SOUTH, Directions.EAST, Directions.WEST]:

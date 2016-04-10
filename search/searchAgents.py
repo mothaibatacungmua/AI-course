@@ -295,7 +295,8 @@ class CornersProblem(search.SearchProblem):
         space)
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        #util.raiseNotDefined()
+        return (self.startingPosition,[self.corners[0], self.corners[1], self.corners[2], self.corners[3]])
 
     def isGoalState(self, state):
         """
@@ -303,7 +304,8 @@ class CornersProblem(search.SearchProblem):
         """
         "*** YOUR CODE HERE ***"
 
-        util.raiseNotDefined()
+        #util.raiseNotDefined()
+        return (len(state[1]) == 0)
 
     def getSuccessors(self, state):
         """
@@ -326,12 +328,19 @@ class CornersProblem(search.SearchProblem):
             #   hitsWall = self.walls[nextx][nexty]
 
             "*** YOUR CODE HERE ***"
-            x, y = state
+            x, y = state[0]
             dx, dy = Actions.directionToVector(action)
             nextx, nexty = int(x + dx), int(y + dy)
             hitsWall = self.walls[nextx][nexty]
             if not hitsWall:
-                nextState = (nextx, nexty)
+                listCorners = state[1][:]
+                nextStatePos = (nextx, nexty)
+
+                if nextStatePos in listCorners:
+                    listCorners.remove(nextStatePos)
+
+                nextState = (nextStatePos, listCorners)
+
                 cost = 1
                 successors.append((nextState, action, cost))
 
@@ -369,7 +378,41 @@ def cornersHeuristic(state, problem):
     walls = problem.walls # These are the walls of the maze, as a Grid (game.py)
 
     "*** YOUR CODE HERE ***"
-    return 0 # Default to trivial solution
+    from operator import itemgetter, attrgetter, methodcaller
+    coord = state[0]
+    
+
+    greaterX = [x for x in state[1] if x[0] >= coord[0]]
+    lowerX = [x for x in state[1] if x[0] < coord[1]]
+
+    sortedGreaterX = sorted(greaterX, key=itemgetter(0))
+    sortedLowerX = sorted(lowerX, key=itemgetter(0))
+
+    minR = 0
+    minL = 0
+    sumR = 0
+    sumL = 0
+
+    mathansR = list(map(lambda x:abs(x[0] - coord[0]) + abs(x[1] - coord[1]), greaterX))
+    mathansL = list(map(lambda x:abs(x[0] - coord[0]) + abs(x[1] - coord[1]), lowerX))
+
+    if len(mathansR) > 0:
+        minR = min(mathansR)
+
+        next = sortedGreaterX[0]
+        for i in range(1,len(sortedGreaterX)):
+            sumR = sumR + abs(next[0] - sortedGreaterX[i][0]) + abs(next[1] - sortedGreaterX[i][1])
+            next = sortedGreaterX[i]
+
+    if len(mathansL) > 0:
+        minL = min(mathansL)
+
+        next = sortedLowerX[0]
+        for i in range(1,len(sortedLowerX)):
+            sumR = sumR + abs(next[0] - sortedLowerX[i][0]) + abs(next[1] - sortedLowerX[i][1])
+            next = sortedLowerX[i]
+
+    return (minR + minL + sumR + sumL)
 
 class AStarCornersAgent(SearchAgent):
     "A SearchAgent for FoodSearchProblem using A* and your foodHeuristic"
@@ -463,6 +506,17 @@ def foodHeuristic(state, problem):
     """
     position, foodGrid = state
     "*** YOUR CODE HERE ***"
+
+    startFoodGrid = (problem.getStartState())[1]
+    foodCount = startFoodGrid.count()
+
+    mathans = list(map(lambda x:abs(x[0] - position[0]) + abs(x[1] - position[1]), foodGrid.asList()))
+
+    sortedMathans = sorted(mathans)
+
+    if len(mathans) > 0:
+        return sum(sortedMathans[:foodCount-1])
+
     return 0
 
 class ClosestDotSearchAgent(SearchAgent):

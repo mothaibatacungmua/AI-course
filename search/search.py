@@ -92,7 +92,6 @@ def normalGraphSearch(problem, fringe):
 
         if not (pos in visited):
             visited.append(pos)
-
             successors = problem.getSuccessors(pos)
 
             for s in successors:
@@ -136,7 +135,11 @@ def breadthFirstSearch(problem):
 def uniformCostSearch(problem):
     """Search the node of least total cost first."""
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    #util.raiseNotDefined()
+    calcGn = lambda travel: sum([x[2] for x in travel])
+    priorityQueue = util.PriorityQueueWithFunction(calcGn)
+
+    return normalGraphSearch(problem, priorityQueue)
 
 def nullHeuristic(state, problem=None):
     """
@@ -148,7 +151,13 @@ def nullHeuristic(state, problem=None):
 def aStarSearch(problem, heuristic=nullHeuristic):
     """Search the node that has the lowest combined cost and heuristic first."""
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    #util.raiseNotDefined()
+
+    calcFn = lambda travel: sum([x[2] for x in travel]) + heuristic(travel[len(travel)-1][0], problem)
+
+    priorityQueue = util.PriorityQueueWithFunction(calcFn)
+
+    return normalGraphSearch(problem, priorityQueue)
 
 
 # Abbreviations

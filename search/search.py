@@ -72,6 +72,38 @@ def tinyMazeSearch(problem):
     w = Directions.WEST
     return  [s, s, w, s, w, w, s, w]
 
+from game import Directions
+
+def normalGraphSearch(problem, fringe):
+    visited = []
+    startState = problem.getStartState()
+
+    fringe.push([(startState, Directions.STOP, 0)])
+
+    while not fringe.isEmpty():
+        travel = fringe.pop()
+
+        lastNode = travel[len(travel)-1]
+        pos = lastNode[0]
+
+        if problem.isGoalState(pos):
+            #return success path
+            return [x[1] for x in travel][1:]
+
+        if not (pos in visited):
+            visited.append(pos)
+
+            successors = problem.getSuccessors(pos)
+
+            for s in successors:
+                if not (s[0] in visited):
+                    newTravel = travel[:]
+                    newTravel.append(s)
+                    fringe.push(newTravel)
+
+    return []
+    pass
+
 def depthFirstSearch(problem):
     """
     Search the deepest nodes in the search tree first.
@@ -87,12 +119,19 @@ def depthFirstSearch(problem):
     print "Start's successors:", problem.getSuccessors(problem.getStartState())
     """
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    #util.raiseNotDefined()
+
+    stack = util.Stack()
+    return normalGraphSearch(problem, stack)
 
 def breadthFirstSearch(problem):
     """Search the shallowest nodes in the search tree first."""
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    #util.raiseNotDefined()
+    queue = util.Queue()
+
+    return normalGraphSearch(problem, queue)
+
 
 def uniformCostSearch(problem):
     """Search the node of least total cost first."""

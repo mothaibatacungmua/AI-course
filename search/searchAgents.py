@@ -305,7 +305,7 @@ class CornersProblem(search.SearchProblem):
                 return i
         return None
 
-    def isSubtarget(self, state):
+    def isNonVisitedSubtarget(self, state):
         i = self.isCorner(state)
         
         return ((i != None) and (self.visitedCorners[i] == False))
@@ -325,8 +325,6 @@ class CornersProblem(search.SearchProblem):
         """
         "*** YOUR CODE HERE ***"
 
-        self.setEatenCorner(state)
-
         return (self.visitedCorners[0] and \
                 self.visitedCorners[1] and \
                 self.visitedCorners[2] and \
@@ -343,6 +341,8 @@ class CornersProblem(search.SearchProblem):
             state, 'action' is the action required to get there, and 'stepCost'
             is the incremental cost of expanding to that successor
         """
+
+        self.setEatenCorner(state)
 
         successors = []
         for action in [Directions.NORTH, Directions.SOUTH, Directions.EAST, Directions.WEST]:

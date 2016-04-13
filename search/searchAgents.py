@@ -361,6 +361,42 @@ class CornersProblem(search.SearchProblem):
         return len(actions)
 
 
+def mathan(A, B):
+    return abs(A[0] - B[0]) + abs(A[1] - B[1])
+
+def calcLowerBound(problem, currentPosition, targetPosition):
+    BACKTRACK_EXPAND = 40
+
+    _visited = []
+    _queue = []
+
+    _queue.append(targetPosition)
+    i = 0
+    depth = 0
+    while i <= BACKTRACK_EXPAND:
+        items = _queue[:]
+        _queue = []
+        depth = depth + 1
+        for item in items:
+            if item == currentPosition:
+                return depth
+
+            if not (item in _visited):
+                _visited.append(item)
+
+                for direction in [Directions.NORTH, Directions.SOUTH, Directions.EAST, Directions.WEST]:
+                    x,y = item
+                    dx, dy = Actions.directionToVector(direction)
+                    nextx, nexty = int(x + dx), int(y + dy)
+                    if not problem.walls[nextx][nexty]:
+                        i = i + 1
+                        _queue.append((nextx, nexty))
+            
+
+    distances = list(map(lambda x:mathan(currentPosition,x)+mathan(x, targetPosition), _queue))
+
+    return min(distances)
+
 def cornersHeuristic(state, problem):
     """
     A heuristic for the CornersProblem that you defined.
@@ -382,37 +418,18 @@ def cornersHeuristic(state, problem):
     coord = state[0]
     
 
-    greaterX = [x for x in state[1] if x[0] >= coord[0]]
-    lowerX = [x for x in state[1] if x[0] < coord[1]]
+    heurs = list(map(lambda x:calcLowerBound(problem, coord, x), state[1]))
 
-    sortedGreaterX = sorted(greaterX, key=itemgetter(0))
-    sortedLowerX = sorted(lowerX, key=itemgetter(0))
+    #print heurs
+    #print state
+    #util.raiseNotDefined()
+    if len(heurs) == 0:
+        return 0
 
-    minR = 0
-    minL = 0
-    sumR = 0
-    sumL = 0
-
-    mathansR = list(map(lambda x:abs(x[0] - coord[0]) + abs(x[1] - coord[1]), greaterX))
-    mathansL = list(map(lambda x:abs(x[0] - coord[0]) + abs(x[1] - coord[1]), lowerX))
-
-    if len(mathansR) > 0:
-        minR = min(mathansR)
-
-        next = sortedGreaterX[0]
-        for i in range(1,len(sortedGreaterX)):
-            sumR = sumR + abs(next[0] - sortedGreaterX[i][0]) + abs(next[1] - sortedGreaterX[i][1])
-            next = sortedGreaterX[i]
-
-    if len(mathansL) > 0:
-        minL = min(mathansL)
-
-        next = sortedLowerX[0]
-        for i in range(1,len(sortedLowerX)):
-            sumR = sumR + abs(next[0] - sortedLowerX[i][0]) + abs(next[1] - sortedLowerX[i][1])
-            next = sortedLowerX[i]
-
-    return (minR + minL + sumR + sumL)
+    sortedHeurs = sorted(heurs, reverse=True)
+    #print sortedHeurs
+    
+    return sortedHeurs[0]
 
 class AStarCornersAgent(SearchAgent):
     "A SearchAgent for FoodSearchProblem using A* and your foodHeuristic"
@@ -508,20 +525,22 @@ def foodHeuristic(state, problem):
     "*** YOUR CODE HERE ***"
 
     from operator import itemgetter, attrgetter, methodcaller
-    coord = position
+
+
+    coord = state[0]
+    heurs = list(map(lambda x:calcLowerBound(problem, coord, x), foodGrid.asList()))
+
+    #print heurs
+    #print state
+    #util.raiseNotDefined()
+    if len(heurs) == 0:
+        return 0
+
+    sortedHeurs = sorted(heurs, reverse=True)
+    #print sortedHeurs
     
-    sortedFoodGrid = sorted(foodGrid.asList(), key=lambda x:abs(x[0] - coord[0]) + abs(x[1] - coord[1]))
-    sumMathan = 0
+    return sortedHeurs[0]
 
-    if len(sortedFoodGrid) >= 1:
-        sumMathan = sumMathan + abs(sortedFoodGrid[0][0] - coord[0]) + abs(sortedFoodGrid[0][1] - coord[1])
-
-        next = sortedFoodGrid[0]
-        for x in sortedFoodGrid[1:]:
-            sumMathan = sumMathan + abs(x[0] - next[0]) + abs(x[1] - next[1])
-            next = x
-
-    return sumMathan
 
 class ClosestDotSearchAgent(SearchAgent):
     "Search for all food using a sequence of searches"
@@ -551,8 +570,11 @@ class ClosestDotSearchAgent(SearchAgent):
         walls = gameState.getWalls()
         problem = AnyFoodSearchProblem(gameState)
 
+        #print food.asList()
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+
+        return search.astar(problem)
+        #util.raiseNotDefined()
 
 class AnyFoodSearchProblem(PositionSearchProblem):
     """
@@ -588,7 +610,9 @@ class AnyFoodSearchProblem(PositionSearchProblem):
         x,y = state
 
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        
+        #util.raiseNotDefined()
+        return (state in self.food.asList())
 
 def mazeDistance(point1, point2, gameState):
     """

@@ -17,6 +17,7 @@ from game import Directions
 import random, util
 
 from game import Agent
+import sys
 
 class ReflexAgent(Agent):
     """
@@ -213,6 +214,12 @@ class MultiAgentSearchAgent(Agent):
       is another abstract class.
     """
 
+    FOOD_REWARD = 2
+    CAPSULE_REWARD = 4
+    GHOST_REWARD = -5
+    DECAY = 0.8
+    OLD_POS_REWARD = -0.5
+
     def __init__(self, evalFn = 'scoreEvaluationFunction', depth = '2'):
         self.index = 0 # Pacman is always agent index 0
         self.evaluationFunction = util.lookup(evalFn, globals())
@@ -222,6 +229,10 @@ class MinimaxAgent(MultiAgentSearchAgent):
     """
       Your minimax agent (question 2)
     """
+
+    def __init__(self, *args, **kwargs):
+      self.posSaved = {}
+      MultiAgentSearchAgent.__init__(self, *args, **kwargs)
 
     def getAction(self, gameState):
         """
@@ -279,7 +290,7 @@ class MinimaxAgent(MultiAgentSearchAgent):
 
       if len(legalMoves) == 0:
         return (self.evaluationFunction(gameState), None)
-        
+
       calcMins = []
 
       if ghostIndex < maxGhostIndex:
@@ -302,17 +313,95 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
       Your minimax agent with alpha-beta pruning (question 3)
     """
 
+    def __init__(self, *args, **kwargs):
+      self.posSaved = {}
+      MultiAgentSearchAgent.__init__(self, *args, **kwargs)
+
+
     def getAction(self, gameState):
         """
           Returns the minimax action using self.depth and self.evaluationFunction
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        #util.raiseNotDefined()
+        pacmanIndex = 0
+        ghostIndex = 1
+        numberAgents = gameState.getNumAgents()
+        maxGhostIndex = numberAgents - 1
+
+        alpha = -sys.maxint
+        beta = sys.maxint
+
+        maxScore, action = self.maxNode(alpha, beta, gameState, 1, pacmanIndex, maxGhostIndex)
+
+        return action
+
+    def maxNode(self, alpha, beta, gameState, depth, pacmanIndex, maxGhostIndex):
+      if depth > self.depth:
+        return (self.evaluationFunction(gameState), None)
+
+      legalMoves = gameState.getLegalActions(pacmanIndex)
+      if len(legalMoves) == 0:
+        return (self.evaluationFunction(gameState), None)
+      
+      firstGhostIndex = 1
+      v = -sys.maxint * 1.0
+      track = None
+
+      for action in legalMoves:
+        successorGameState = gameState.generateSuccessor(pacmanIndex, action)
+        t = v
+        v = max(v, self.minNode(alpha, beta, successorGameState, depth, firstGhostIndex,maxGhostIndex, pacmanIndex)[0])
+
+        if t != v:
+          track = action
+        #prunning
+        if (v > beta):
+          return (v, action)
+
+        alpha = max(alpha, v)
+
+      return (v, track)
+      
+
+    def minNode(self, alpha, beta, gameState, depth, ghostIndex, maxGhostIndex, pacmanIndex):
+      legalMoves = gameState.getLegalActions(ghostIndex)
+
+      if len(legalMoves) == 0:
+        return (self.evaluationFunction(gameState), None)
+        
+      calcMins = []
+      v = sys.maxint * 1.0
+      track = None
+
+      for action in legalMoves:
+        successorGameState = gameState.generateSuccessor(ghostIndex, action)
+        t = v
+        if ghostIndex < maxGhostIndex:
+          v = min(v, self.minNode(alpha, beta, successorGameState, depth, ghostIndex + 1, maxGhostIndex, pacmanIndex)[0])
+        else:  
+          v = min(v, self.maxNode(alpha, beta, successorGameState, depth + 1, pacmanIndex, maxGhostIndex)[0])
+
+        if t != v:
+          track = action
+
+        #prunning
+        if (v < alpha):
+          return (v, action)
+        
+        beta = min(beta, v)
+
+      return (v, track)
 
 class ExpectimaxAgent(MultiAgentSearchAgent):
     """
       Your expectimax agent (question 4)
     """
+
+    def __init__(self, *args, **kwargs):
+      self.posSaved = {}
+      MultiAgentSearchAgent.__init__(self, *args, **kwargs)
+
 
     def getAction(self, gameState):
         """
@@ -322,7 +411,138 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
           legal moves.
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        #util.raiseNotDefined()
+        pacmanIndex = 0
+        ghostIndex = 1
+        numberAgents = gameState.getNumAgents()
+        maxGhostIndex = numberAgents - 1
+        
+        maxScore, action = self.maxNode(gameState, 1, pacmanIndex, maxGhostIndex)
+
+        return action
+
+    def maxNode(self, gameState, depth, pacmanIndex, maxGhostIndex):
+      if depth > self.depth:
+        return (self.evaluationFunction(gameState), None)
+
+      legalMoves = gameState.getLegalActions(pacmanIndex)
+      if len(legalMoves) == 0:
+        return (self.evaluationFunction(gameState), None)
+      
+      calcMins = []
+      firstGhostIndex = 1
+
+      for action in legalMoves:
+        successorGameState = gameState.generateSuccessor(pacmanIndex, action)
+        calcMins.append(self.expectNode(successorGameState, depth, firstGhostIndex,maxGhostIndex, pacmanIndex)[0])
+
+      maxScore = max(calcMins)
+      indices = [i for i in range(len(calcMins)) if calcMins[i] == maxScore]
+
+      return (maxScore, legalMoves[random.choice(indices)])
+
+    def expectNode(self, gameState, depth, ghostIndex, maxGhostIndex, pacmanIndex):
+      legalMoves = gameState.getLegalActions(ghostIndex)
+      if len(legalMoves) == 0:
+        return (self.evaluationFunction(gameState), None)
+
+      totalScore = 0.0
+      for action in legalMoves:
+        successorGameState = gameState.generateSuccessor(ghostIndex, action)
+        if ghostIndex < maxGhostIndex:
+          totalScore = totalScore + self.expectNode(successorGameState, depth, ghostIndex + 1, maxGhostIndex, pacmanIndex)[0]
+        else:  
+          totalScore = totalScore + self.maxNode(successorGameState, depth + 1, pacmanIndex, maxGhostIndex)[0]
+
+      return (totalScore/len(legalMoves), None)
+
+
+FOOD_REWARD = 2
+CAPSULE_REWARD = 4
+GHOST_REWARD = -5
+DECAY = 0.8
+CLEAR_REWARD = 20
+
+def calcKNearestFoodReward(k, pacmanPos, foodGrid, capsulesList, walls):
+  closed = []
+  queue = util.Queue()
+
+  queue.push(pacmanPos)
+  closed.append(pacmanPos)
+
+  findFood = 0
+  totalScore = 0.0
+
+  count = 0
+
+  while not queue.isEmpty():
+    travel = queue.pop()
+    count = count + 1
+    #print count
+    #print travel
+    if foodGrid[travel[0]][travel[1]]:
+      findFood = findFood + 1
+
+      if travel in capsulesList:
+        totalScore = totalScore + pow(DECAY,manhattanDistance(pacmanPos, travel)) * CAPSULE_REWARD
+      else:
+        totalScore = totalScore + pow(DECAY,manhattanDistance(pacmanPos, travel)) * FOOD_REWARD
+
+
+    if findFood == k:
+      break
+
+    for i in [-1, 0, 1]:
+      if (travel[0] + i) < 0 or (travel[0] + i) > (foodGrid.width - 1):
+          continue
+
+      for j in [-1, 0, 1]:
+        if (travel[1] + j) < 0 or (travel[1] + j) > (foodGrid.height - 1):
+          continue
+
+        newTravel = (travel[0] + i, travel[1] + j)
+        if walls[travel[0] + i][travel[1] + j] or (newTravel in closed):
+          continue
+
+        closed.append(newTravel)
+        queue.push(newTravel)
+
+  if findFood == 0:
+    score = 0
+  else:
+    score = 1.0/findFood * totalScore
+
+  return score
+
+def calcGhostReward(ghostStates, pacmanPos):
+  numGhosts = len(ghostStates)
+  totalScore = 0.0
+  for ghostState in ghostStates:
+    totalScore = totalScore + (ghostState.scaredTimer == 0) *(\
+                 GHOST_REWARD * \
+                 (manhattanDistance(pacmanPos, ghostState.getPosition()) == 1) +
+                 2*GHOST_REWARD * \
+                 (manhattanDistance(pacmanPos, ghostState.getPosition()) == 0))
+
+  return totalScore
+
+def calcScaredReward(ghostStates, pacmanPos):
+  totalScore = 0.0
+  for ghostState in ghostStates:
+    totalScore = totalScore + (ghostState.scaredTimer > 0)*(ghostState.scaredTimer - manhattanDistance(pacmanPos, ghostState.getPosition()))
+
+  return totalScore
+
+def calcRemainFood(gameState):
+  foodGrid = gameState.getFood()
+  numFoods = gameState.getNumFood()
+
+  score = (foodGrid.height * foodGrid.width - numFoods)
+
+  if numFoods == 0:
+    score = score + CLEAR_REWARD
+
+  return score
 
 def betterEvaluationFunction(currentGameState):
     """
@@ -332,7 +552,22 @@ def betterEvaluationFunction(currentGameState):
       DESCRIPTION: <write something here so we know what you did>
     """
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    pacmanPos = currentGameState.getPacmanPosition()
+    ghostStates = currentGameState.getGhostStates()
+    capsulesList = currentGameState.getCapsules()
+    walls = currentGameState.getWalls()    
+    foodGrid = currentGameState.getFood()
+
+    A = calcKNearestFoodReward(3, pacmanPos, foodGrid, capsulesList, walls)
+    B = calcGhostReward(ghostStates, pacmanPos)
+    C = calcScaredReward(ghostStates, pacmanPos)
+    D = calcRemainFood(currentGameState)
+
+    alpha = 0.2
+    beta = 0.5
+    gamma = 0.1
+    theta = 0.2
+    return  (alpha*A + beta*B  + gamma*C + theta*D)
 
 # Abbreviation
 better = betterEvaluationFunction

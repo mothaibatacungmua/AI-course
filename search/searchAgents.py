@@ -420,14 +420,10 @@ def cornersHeuristic(state, problem):
 
     heurs = list(map(lambda x:calcLowerBound(problem, coord, x), state[1]))
 
-    #print heurs
-    #print state
-    #util.raiseNotDefined()
     if len(heurs) == 0:
         return 0
 
     sortedHeurs = sorted(heurs, reverse=True)
-    #print sortedHeurs
     
     return sortedHeurs[0]
 
@@ -530,14 +526,10 @@ def foodHeuristic(state, problem):
     coord = state[0]
     heurs = list(map(lambda x:calcLowerBound(problem, coord, x), foodGrid.asList()))
 
-    #print heurs
-    #print state
-    #util.raiseNotDefined()
     if len(heurs) == 0:
         return 0
 
     sortedHeurs = sorted(heurs, reverse=True)
-    #print sortedHeurs
     
     return sortedHeurs[0]
 

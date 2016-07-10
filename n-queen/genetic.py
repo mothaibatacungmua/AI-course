@@ -1,0 +1,3 @@
+def genetic(self):
+    pass
+

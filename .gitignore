@@ -1,2 +1,5 @@
 *.zip
 *.pyc
+.idea/
+search/*.pyc
+n-puzzle/node_modules/*

@@ -1,0 +1,68 @@
+[3, 13, 13, 17, 33, 38, 0, 0, 13, 19, 2, 26, 9, 15, 34, 3, 15, 38, 33, 1, 5, 1, 20, 22, 17, 27, 17, 16, 38, 29, 14, 34, 18, 25, 21, 2, 9, 27, 19, 19]
+[3, 13, 15, 17, 33, 38, 0, 2, 14, 19, 6, 27, 9, 18, 34, 4, 16, 39, 35, 5, 7, 12, 20, 32, 26, 36, 25, 31, 29, 10, 37, 21, 8, 1, 11, 28, 24, 22, 30, 23] True 76011
+
+def back_tracking_mrv(problem, with_forward_checking=False):
+    global COUNT
+    COUNT = 0
+
+    def count_remain_values(state, pos):
+        count = 0
+        s = state[:]
+        for i in range(0, N):
+            s[pos] = (s[pos] + i) % N
+            if check_collision_at(s, pos):
+                count = count + 1
+        return N - count
+
+    def select_mrv(state, assignment):
+        if len(assignment) == N:
+            return None
+
+        assigned_var = list(map(lambda x: x[0], assignment))
+        unassigned_var = [x for x in range(0, N) if x not in assigned_var];
+
+        unassigned_var = sorted(unassigned_var, key=lambda x: count_remain_values(state, x))
+        return unassigned_var[0]
+
+
+
+    def forward_checking(state, pos, domain_value):
+        s = state[:]
+        new_domain = domain_value[:]
+
+        for i in range(0, len(state)):
+            if i != pos:
+                for j in new_domain[i]:
+                    if check_collision((i, j), (pos, state[pos])):
+                        new_domain[i].remove(j)
+
+        return new_domain
+
+    def search(state, assignment, domain_value):
+        global  COUNT
+        COUNT = COUNT + 1
+        if len(assignment) == N:
+            return assignment, True
+
+        var = select_mrv(state, assignment)
+
+        for i in domain_value[var]:
+            s = state[:]
+            s[var] = (s[var] + i) % N
+            assigned_var = list(map(lambda x:x[0], assignment))
+            if contraints(s, assigned_var, var):
+                assignment.append((var, s[var]))
+                assignment, goal = search(s, assignment)
+                if goal:
+                    return assignment, True
+                assignment.pop()
+
+        return assignment, False
+        pass
+
+    assignment, goal = search(problem, [])
+    ret = problem[:]
+    for i in range(0, len(assignment)):
+        ret[assignment[i][0]] = assignment[i][1]
+
+    return ret, goal

@@ -3,6 +3,8 @@ import gzip
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib
+import theano
+import theano.tensor as T
 
 mnist_train = None
 mnist_validation = None
@@ -17,7 +19,7 @@ def load_data():
         mnist_train, mnist_validation, mnist_test = cPickle.load(f)
         f.close()
 
-    return (mnist_train, mnist_validation, mnist_test)
+    return mnist_train, mnist_validation, mnist_test
 
 
 def display_image(index):
@@ -55,11 +57,23 @@ def vectorized_result(j):
     e[j] = 1.0
     return e
 
+
 def softmax_data_wrapper():
-    pass
+    train, validation, test = load_data()
+
+    return (train, validation, test)
+
 
 def svm_data_wrapper():
-    pass
+    return softmax_data_wrapper()
+
+
+def shared_dat(Xy, borrow=True):
+    X, y = Xy
+    shared_X = theano.shared(np.asarray(X, dtype=theano.config.floatX), borrow=borrow)
+    shared_y = theano.shared(np.asarray(y, dtype=theano.config.floatX), borrow=borrow)
+
+    return shared_X, T.cast(shared_y, 'int32')
 
 '''
 if __name__ == '__main__':

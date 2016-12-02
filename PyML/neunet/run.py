@@ -1,9 +1,9 @@
 from advance_network import Network
-from libs import neunet_data_wrapper
+from PyML.libs import neunet_data_wrapper
 from quadratic_cost import QuadraticCost
 from cross_entropy_cost import CrossEntropyCost
 from softmax_cost import SoftmaxCost
-from libs import plot_comparing, plot_training_cost, plot_test_cost
+from PyML.libs import plot_comparing, plot_training_cost, plot_test_cost
 
 training_data, validation_data, test_data = neunet_data_wrapper()
 

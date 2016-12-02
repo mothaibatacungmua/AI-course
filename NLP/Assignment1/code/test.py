@@ -6,17 +6,17 @@ from featureextractor import FeatureExtractor
 from transition import Transition
 
 if __name__ == '__main__':
-    data = dataset.get_swedish_train_corpus().parsed_sents()
+    data = dataset.get_english_train_corpus().parsed_sents()
     random.seed(1234)
     subdata = random.sample(data, 200)
 
     try:
-        # tp = TransitionParser(Transition, FeatureExtractor)
-        # tp.train(subdata)
-        # tp.save('swedish.model')
+        #tp = TransitionParser(Transition, FeatureExtractor)
+        #tp.train(subdata)
+        #tp.save('swedish.model')
 
-        testdata = dataset.get_swedish_test_corpus().parsed_sents()
-        tp = TransitionParser.load('badfeatures.model')
+        testdata = dataset.get_english_test_corpus().parsed_sents()
+        tp = TransitionParser.load('english.model')
 
         parsed = tp.parse(testdata)
 
@@ -27,12 +27,12 @@ if __name__ == '__main__':
 
         ev = DependencyEvaluator(testdata, parsed)
         print "UAS: {} \nLAS: {}".format(*ev.eval())
-
+        f.close()
         # parsing arbitrary sentences (english):
         # sentence = DependencyGraph.from_sentence('Hi, this is a test')
 
         # tp = TransitionParser.load('english.model')
-        # parsed = tp.parse([sentence])
+        # parsed = tp.parse([senteswedishnce])
         # print parsed[0].to_conll(10).encode('utf-8')
     except NotImplementedError:
         print """

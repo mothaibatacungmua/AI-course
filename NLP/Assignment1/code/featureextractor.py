@@ -2,6 +2,9 @@ from nltk.compat import python_2_unicode_compatible
 
 printed = False
 
+
+
+
 @python_2_unicode_compatible
 class FeatureExtractor(object):
     @staticmethod
@@ -58,6 +61,7 @@ class FeatureExtractor(object):
         [http://books.google.com/books/about/Dependency_Parsing.html?id=k3iiup7HB9UC]
         """
 
+
         result = []
 
 
@@ -70,8 +74,13 @@ class FeatureExtractor(object):
         if stack:
             stack_idx0 = stack[-1]
             token = tokens[stack_idx0]
+            #print token.keys()
+            #print token['ctag']
             if FeatureExtractor._check_informative(token['word'], True):
                 result.append('STK_0_FORM_' + token['word'])
+
+            if FeatureExtractor._check_informative(token['lemma'], True):
+                result.append('STK_0_LEMMA_' + token['lemma'])
 
             if 'feats' in token and FeatureExtractor._check_informative(token['feats']):
                 feats = token['feats'].split("|")
@@ -86,11 +95,35 @@ class FeatureExtractor(object):
             if FeatureExtractor._check_informative(dep_right_most):
                 result.append('STK_0_RDEP_' + dep_right_most)
 
+            if 'tag' in token and FeatureExtractor._check_informative(token['tag']):
+                if len(token['tag']) > 1:
+                    result.append('STK_0_TAG_'+token['tag'])
+
+            if len(stack) > 1 and stack[-2] != 0:
+                stack_idx1 = stack[-2]
+                token = tokens[stack_idx1]
+                if FeatureExtractor._check_informative(token['word'], True):
+                    result.append('STK_1_FORM_' + token['word'])
+
+                if FeatureExtractor._check_informative(token['lemma'], True):
+                    result.append('STK_1_LEMMA_' + token['lemma'])
+
+                if 'tag' in token and FeatureExtractor._check_informative(token['tag']):
+                    if len(token['tag']) > 1:
+                        result.append('STK_1_TAG_' + token['tag'])
+
         if buffer:
             buffer_idx0 = buffer[0]
             token = tokens[buffer_idx0]
             if FeatureExtractor._check_informative(token['word'], True):
                 result.append('BUF_0_FORM_' + token['word'])
+
+            if FeatureExtractor._check_informative(token['lemma'], True):
+                result.append('BUF_0_LEMMA_' + token['lemma'])
+
+            if 'tag' in token and FeatureExtractor._check_informative(token['tag']):
+                if len(token['tag']) > 1:
+                    result.append('BUF_0_TAG_' + token['tag'])
 
             if 'feats' in token and FeatureExtractor._check_informative(token['feats']):
                 feats = token['feats'].split("|")
@@ -104,4 +137,22 @@ class FeatureExtractor(object):
             if FeatureExtractor._check_informative(dep_right_most):
                 result.append('BUF_0_RDEP_' + dep_right_most)
 
+
+            i = 1
+            while(i < 2 and i < len(buffer)):
+                bidx = buffer[i]
+                token = tokens[bidx]
+                if i < 2:
+                    if FeatureExtractor._check_informative(token['word'], True):
+                        result.append('BUF_'+ str(i) +'_FORM_' + token['word'])
+
+                if FeatureExtractor._check_informative(token['lemma'], True):
+                    result.append('BUF_' + str(i) + '_LEMMA_' + token['lemma'])
+
+                if 'tag' in token and FeatureExtractor._check_informative(token['tag']):
+                    if len(token['tag']) > 1:
+                        result.append('BUF_'+ str(i) +'_TAG_' + token['tag'])
+                i += 1
+
+        #print result
         return result

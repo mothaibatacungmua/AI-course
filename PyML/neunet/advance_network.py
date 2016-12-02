@@ -1,8 +1,8 @@
 import random
 import numpy as np
 from cross_entropy_cost import CrossEntropyCost
-from libs import sigmoid, sigmoid_prime
-from libs import vectorized_result
+from PyML.libs import sigmoid, sigmoid_prime
+from PyML.libs import vectorized_result
 from SGD import SGD
 from CM import CM
 from NAG import NAG

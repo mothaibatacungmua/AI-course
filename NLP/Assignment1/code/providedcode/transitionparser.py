@@ -244,6 +244,7 @@ class TransitionParser(object):
         for depgraph in depgraphs:
             conf = Configuration(depgraph, self._user_feature_extractor.extract_features)
             while conf.buffer:
+
                 features = conf.extract_features()
                 col = []
                 row = []
@@ -258,7 +259,6 @@ class TransitionParser(object):
                 np_data = np.array(data)
 
                 x_test = sparse.csr_matrix((np_data, (np_row, np_col)), shape=(1, len(self._dictionary)))
-
                 pred_prob = self._model.predict_proba(x_test)[0]
 
                 sorted_predicted_values = [

@@ -7,7 +7,6 @@ from math import ceil, floor
 class Convl2D(object):
     def __init__(self,
                  input,
-                 input_shape,
                  nin_feature_maps,
                  nout_feature_maps,
                  filter_shape,
@@ -16,8 +15,6 @@ class Convl2D(object):
                  using_bias=False,
                  padding='SAME'):
         self.input = input
-        self.height = input_shape[0]
-        self.width = input_shape[1]
         self.nin_feature_maps = nin_feature_maps
         self.activation = activation
         self.using_bias = using_bias
@@ -39,10 +36,7 @@ class Convl2D(object):
     pass
 
     def output(self):
-        shape4D = [-1, self.height, self.width, self.nin_feature_maps]
-
-        X_image = tf.reshape(self.input, shape4D)
-        linout = tf.nn.conv2d(X_image, self.weights,
+        linout = tf.nn.conv2d(self.input, self.weights,
                               strides=[1, self.strides[0], self.strides[1], 1],
                               padding=self.padding)
         if self.using_bias:
@@ -140,12 +134,13 @@ class SoftmaxLayer(object):
 paper: https://arxiv.org/abs/1502.03167
 ref: http://stackoverflow.com/questions/33949786/how-could-i-use-batch-normalization-in-tensorflow
 '''
-def batch_norm(X, n_feature_maps, phase_train):
+def batch_norm(X, phase_train):
     with tf.variable_scope('bn'):
-        beta = tf.Variable(tf.constant(0.0, shape=[n_feature_maps]),
+        params_shape = [X.get_shape()[-1]]
+        beta = tf.Variable(tf.constant(0.0, shape=params_shape),
                            name='beta', trainable=True)
 
-        gamma = tf.Variable(tf.constant(0.0, shape=[n_feature_maps]),
+        gamma = tf.Variable(tf.constant(0.0, shape=params_shape),
                             name='gamma', trainable=True)
 
         batch_mean, batch_var = tf.nn.moments(X, [0,1,2], name='moments')
@@ -203,48 +198,38 @@ def cnn_bn_model(X, y, dropout_prob, phase_train):
     # Layer 1, convol window 7x7, stride width = 2, stride height = 2 with max pooling, padding = SAME
     # Number input channels = 3, number output channels = 64
     with tf.variable_scope('conv_1'):
-        conv1 = Convl2D(X_image,(256, 256), 3, 64, (7, 7), strides=(2,2), padding='SAME')
-        conv1_bn = batch_norm(conv1.output(), 64, phase_train)
+        conv1 = Convl2D(X_image, 3, 64, (7, 7), strides=(2,2), padding='SAME')
+        conv1_bn = batch_norm(conv1.output(), phase_train)
         conv1_out = tf.nn.relu(conv1_bn)
-
-        output_size = compute_output_size((256, 256), (7, 7), (2, 2), 'SAME')
 
         pool1 = MaxPooling2D(conv1_out, [1, 2, 2, 1], padding='SAME')
         pool1_out = pool1.output()
 
-        output_size = compute_output_size(output_size, (2,2), (2,2), 'SAME')
-
     # Layer 2, convol window 3x3, stride width = 1, stride height = 1 without pooling, padding = SAME
     # Number output channels: 64, number output channels = 64
     with tf.variable_scope('conv_2'):
-        conv2 = Convl2D(pool1_out, output_size, 64, 64, (3,3), strides=(1,1), padding='SAME')
-        conv2_bn = batch_norm(conv2.output(), 64, phase_train)
+        conv2 = Convl2D(pool1_out, 64, 64, (3,3), strides=(1,1), padding='SAME')
+        conv2_bn = batch_norm(conv2.output(), phase_train)
         conv2_out = tf.nn.relu(conv2_bn)
-
-        output_size = compute_output_size(output_size, (3, 3), (1, 1), 'SAME')
 
     # Layer 3, convol window 3x3, stride width = 1, stride height = 1 without pooling, padding = SAME
     # Number output channels: 64, number output channels = 64
     with tf.variable_scope('conv_3'):
-        conv3 = Convl2D(conv2_out, output_size, 64, 64, (3,3), strides=(1,1), padding='SAME')
-        conv3_bn = batch_norm(conv3.output(), 64, phase_train)
+        conv3 = Convl2D(conv2_out, 64, 64, (3,3), strides=(1,1), padding='SAME')
+        conv3_bn = batch_norm(conv3.output(), phase_train)
         conv3_out = tf.nn.relu(conv3_bn)
-
-        output_size = compute_output_size(output_size, (3, 3), (1, 1), 'SAME')
 
     # Layer 4, convol window 3x3, stride width = 1, stride height = 1 with avg pooling, padding = VALID
     # Number output channels: 64, number output channels = 128
     with tf.variable_scope('conv_4'):
-        conv4 = Convl2D(conv3_out, output_size, 64, 128, (3, 3), strides=(1, 1), padding='VALID')
-        conv4_bn = batch_norm(conv4.output(), 128, phase_train)
+        conv4 = Convl2D(conv3_out, 64, 128, (3, 3), strides=(1, 1), padding='VALID')
+        conv4_bn = batch_norm(conv4.output(), phase_train)
         conv4_out = tf.nn.relu(conv4_bn)
-
-        output_size = compute_output_size(output_size, (3, 3), (1, 1), 'VALID')
 
         pool4 = AvgPooling2D(conv4_out, [1, 2, 2, 1], padding='SAME')
         pool4_out = pool4.output()
 
-        output_size = compute_output_size(output_size, (2, 2), (2, 2), 'SAME')
+        output_size = pool4_out.get_shape()[1:2]
 
         pool4_flatten = tf.reshape(pool4_out, [-1, output_size[0]*output_size[1]*128])
 

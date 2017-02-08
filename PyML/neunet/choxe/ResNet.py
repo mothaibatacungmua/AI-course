@@ -145,7 +145,7 @@ def ResNet(X, y, dropout_prob, phase_train):
         x = batch_norm(x, phase_train)
         x = leaky_relu(x, RELU_LEAKINESS)
 
-        output_size = x.get_shape()[1:2]
+        output_size = x.get_shape()[1:3]
         x = tf.reshape(x, [-1, output_size[0] * output_size[1] * filters[1]])
 
     #Hidden Layer: full connected layer with dropout

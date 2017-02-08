@@ -227,13 +227,14 @@ def cnn_bn_model(X, y, dropout_prob, phase_train):
         pool4 = AvgPooling2D(conv4_out, [1, 2, 2, 1], padding='SAME')
         pool4_out = pool4.output()
 
-        output_size = pool4_out.get_shape()[1:2]
-
-        pool4_flatten = tf.reshape(pool4_out, [-1, output_size[0]*output_size[1]*128])
+        #print pool4_out.get_shape()
+        output_size = pool4_out.get_shape()[1:3]
+        flat_size = int(output_size[0])*int(output_size[1])*128
+        pool4_flatten = tf.reshape(pool4_out, [-1, flat_size])
 
     # Layer 5: full connected layer with dropout
     with tf.variable_scope('fc1'):
-        fc1 = FullConnectedLayer(pool4_flatten, output_size[0]*output_size[1]*128, 1000)
+        fc1 = FullConnectedLayer(pool4_flatten, flat_size, 1000)
         fc1_out = fc1.output()
         fc1_dropped = tf.nn.dropout(fc1_out, dropout_prob)
 
@@ -292,12 +293,12 @@ if  __name__ == '__main__':
                 batch_x = train_X[(mini_batch_index-1)*BATCH_SIZE:mini_batch_index*BATCH_SIZE]
                 batch_y = train_y[(mini_batch_index-1)*BATCH_SIZE:mini_batch_index*BATCH_SIZE]
 
-                train_op.run({X: batch_x, y: batch_y, dropout_prob: 0.5, phase_train: True})
+                train_op.run(feed_dict={X: batch_x, y: batch_y, dropout_prob: 0.5, phase_train: True})
 
                 if i % 200 == 0:
                     cv_fd = {X: batch_x, y: batch_y, dropout_prob: 1.0, phase_train: False}
-                    train_loss = loss.eval(cv_fd)
-                    train_accuracy = accuracy.eval(cv_fd)
+                    train_loss = loss.eval(feed_dict = cv_fd)
+                    train_accuracy = accuracy.eval(feed_dict = cv_fd)
 
                     print 'Step, loss, accurary = %6d: %8.4f, %8.4f' % (i,train_loss, train_accuracy)
 

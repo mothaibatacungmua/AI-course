@@ -77,6 +77,7 @@ cost = -sum(diag(log(softmax + tiny) * groundTruth'))/M + ...
        (lambda/2) * sum(sum(stack{2}.w.^2)) + ...
        (lambda/2) * sum(sum(stack{1}.w.^2));
 
+%backward pass
 error_deriv = -(groundTruth - softmax)/M;
 softmaxThetaGrad = error_deriv * h2' + lambda * softmaxTheta;
 

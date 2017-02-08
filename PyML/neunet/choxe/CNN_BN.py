@@ -105,8 +105,6 @@ class FullConnectedLayer(object):
             self.output = tf.nn.tanh(z)
         elif self.activation == 'sigmoid':
             self.output = tf.nn.sigmoid(z)
-        else:
-            assert True == False, "Don't support %s activation" % self.activation
 
         return self.output
 
@@ -247,7 +245,7 @@ def cnn_bn_model(X, y, dropout_prob, phase_train):
 
     return loss, accuracy, y_pred
 
-SAVE_SESS = 'choxe.ckpt'
+SAVE_SESS = 'cnn_bn_choxe.ckpt'
 BATCH_SIZE = 100
 
 if  __name__ == '__main__':
@@ -261,35 +259,19 @@ if  __name__ == '__main__':
 
     #Train model
     learning_rate = 0.01
-    train_step = tf.train.RMSPropOptimizer(learning_rate).minimize(loss)
-    vars_to_save = tf.trainable_variables()
-
-    #Need to save the moving average variables
-    vars_bn1 = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope='conv_1/bn')
-    vars_bn2 = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope='conv_2/bn')
-    vars_bn3 = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope='conv_3/bn')
-    vars_bn4 = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope='conv_4/bn')
-
-    vars_to_save = list(set(vars_to_save)
-                        .union(set(vars_bn1))
-                        .union(set(vars_bn2))
-                        .union(set(vars_bn3))
-                        .union(set(vars_bn4)))
+    train_op = tf.train.RMSPropOptimizer(learning_rate).minimize(loss)
+    #vars_to_save = tf.trainable_variables()
 
 
-    init_op = None
+    init_op = tf.global_variables_initializer()
     if TASK == 'test':
         restore_sess = True
-        vars_all = tf.all_variables()
-        vars_to_init = list(set(vars_all) - set(vars_to_save))
-        init_op = tf.variables_initializer(vars_to_init)
     elif TASK == 'train':
         restore_sess = False
-        init_op = tf.global_variables_initializer()
     else:
         assert 1==0, "Task isn't supported"
 
-    saver = tf.train.Saver(vars_to_save)
+    saver = tf.train.Saver()
 
     train_X, train_y, test_X, test_y = load_data()
     N = train_y.shape[0]
@@ -310,7 +292,7 @@ if  __name__ == '__main__':
                 batch_x = train_X[(mini_batch_index-1)*BATCH_SIZE:mini_batch_index*BATCH_SIZE]
                 batch_y = train_y[(mini_batch_index-1)*BATCH_SIZE:mini_batch_index*BATCH_SIZE]
 
-                train_step.run({X: batch_x, y: batch_y, dropout_prob: 0.5, phase_train: True})
+                train_op.run({X: batch_x, y: batch_y, dropout_prob: 0.5, phase_train: True})
 
                 if i % 200 == 0:
                     cv_fd = {X: batch_x, y: batch_y, dropout_prob: 1.0, phase_train: False}

@@ -198,7 +198,10 @@ if  __name__ == '__main__':
     N = train_y.shape[0]
     num_batches = floor(N / BATCH_SIZE)
     with tf.Session() as sess:
-        sess.run(init_op)
+        if TASK == 'train':
+            sess.run(init_op, feed_dict={phase_train: True})
+        else:
+            sess.run(init_op, feed_dict={phase_train: False})
 
         if restore_sess:
             saver.restore(sess, SAVE_SESS)

@@ -74,7 +74,9 @@ def main(_):
         with tf.train.MonitoredTrainingSession(master=server.target,
                                                is_chief=(FLAGS.task_index == 0),
                                                checkpoint_dir="",
-                                               hooks=hooks) as mon_sess:
+                                               hooks=hooks,
+                                               config=tf.ConfigProto(allow_soft_placement=True)) \
+                as mon_sess:
 
             while not mon_sess.should_stop():
                 mon_sess.run(train_op)

@@ -16,8 +16,8 @@ FLAGS = tf.app.flags.FLAGS
 tf.app.flags.DEFINE_string("job_name", "", "Either 'ps' or 'worker'")
 tf.app.flags.DEFINE_integer("task_index", 0, "Index of task within the job")
 
-parameter_servers = ["192.168.0.124:2222"]
-workers = ["192.168.0.112:2222"]
+parameter_servers = ["172.30.0.187:2222"]
+workers = ["172.30.0.44:2222"]
 
 cluster = tf.train.ClusterSpec({"ps":parameter_servers, "worker":workers})
 

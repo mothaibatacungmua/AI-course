@@ -36,7 +36,7 @@ def main(_):
     elif FLAGS.job_name == 'worker':
         # Assigns ops to the local worker by default.
         with tf.device(tf.train.replica_device_setter(
-            worker_device="/job:worker/task:%d/cpu:0" % FLAGS.task_index,
+            worker_device="/job:worker/task:%d/gpu:0" % FLAGS.task_index,
             cluster=cluster
         )):
             # Build model...
@@ -73,7 +73,7 @@ def main(_):
         hooks = [tf.train.StopAtStepHook(last_step=10000), _LoggerHook()]
         with tf.train.MonitoredTrainingSession(master=server.target,
                                                is_chief=(FLAGS.task_index == 0),
-                                               checkpoint_dir="/tmp/train_logs",
+                                               checkpoint_dir="",
                                                hooks=hooks) as mon_sess:
 
             while not mon_sess.should_stop():

@@ -17,7 +17,7 @@ tf.app.flags.DEFINE_string("job_name", "", "Either 'ps' or 'worker'")
 tf.app.flags.DEFINE_integer("task_index", 0, "Index of task within the job")
 
 parameter_servers = ["172.30.0.187:2222"]
-workers = ["172.30.0.44:2222"]
+workers = ["172.30.0.44:2222", "172.30.0.156:2222"]
 
 cluster = tf.train.ClusterSpec({"ps":parameter_servers, "worker":workers})
 
@@ -70,7 +70,7 @@ def main(_):
                 print("Iter:%d Lost:%0.5f" % (global_step, lost))
 
 
-        hooks = [tf.train.StopAtStepHook(last_step=100), _LoggerHook()]
+        hooks = [tf.train.StopAtStepHook(last_step=10000), _LoggerHook()]
         with tf.train.MonitoredTrainingSession(master=server.target,
                                                is_chief=(FLAGS.task_index == 0),
                                                checkpoint_dir="/tmp/train_logs",

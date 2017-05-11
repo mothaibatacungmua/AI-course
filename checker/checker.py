@@ -340,14 +340,17 @@ if __name__ == '__main__':
 
 
     print "Trainning...\n"
-    bot_x.epsilon = 0.5
-    bot_o.epsilon = 0.5
-    for i in range(20000):
+    bot_x.epsilon = 0.2
+    bot_o.epsilon = 0.2
+    for i in range(50000):
         if (i % 10) == 0:
             print 'Iteration:%d\n' % i
         if i >= 10000:
-            bot_x.epsilon = 0.1
-            bot_o.epsilon = 0.1
+            bot_x.epsilon = 0.15
+            bot_o.epsilon = 0.15
+        if i >= 20000:
+            bot_x.epsilon = 0.10
+            bot_o.epsilon = 0.10
         game.play(bot_x, bot_o, monitor=False)
 
 

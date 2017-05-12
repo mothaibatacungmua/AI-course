@@ -1,5 +1,5 @@
 import random
-from q_value_net import QValueNet
+from tf_qvalue_net import QValueNet
 
 EMPTY = 0
 PLAYER_X = 1
@@ -50,7 +50,7 @@ class Agent(object):
         self.learning = learning
         self.prev_state = None
         self.prev_score = 0.0
-        self.alpha = 0.2
+        self.alpha = 0.1
         pass
 
     def random_move(self, state):
@@ -71,7 +71,8 @@ class Agent(object):
             output = [0, 0]
             output[self.order - 1] = value
             output[self.order % 2] = -value
-            self.game.train_state(state, output)
+            if self.learning:
+                self.game.train_state(state, output)
             self.prev_state = None
             self.prev_score = 0.0
 
@@ -293,7 +294,8 @@ class Checker(object):
     # add neural network here
     # return the approximation of the state-value winning of the input state
     def get_state_value(self, state):
-        return self.qvaluenn.predict(self.convert_state(state))
+        state_value = self.qvaluenn.predict(self.convert_state(state))
+        return state_value
 
     # add a state to training the neural network
     def train_state(self, state, output):
@@ -353,7 +355,11 @@ if __name__ == '__main__':
             bot_o.epsilon = 0.10
         game.play(bot_x, bot_o, monitor=False)
 
-
+    
+    bot_x.learning = False
+    bot_o.learning = False
+    bot_x.epsilon = 0.0
+    box_o.epsilon = 0.0
     print "Testing...\n"
     for i in range(100):
         game.play(bot_x, bot_o, monitor=True)
